@@ -31,27 +31,36 @@ app.get('/api/polygons', async (req, res) => {
   }
 });
 
+// генерация инфы о гексе
+async function setInfoPolygon_10(h3Index) {
+    const numbers = [];
+    for (let i = 0; i < 3; i++) {
+        const randomNumber = Math.floor(Math.random() * 10);
+        numbers.push(randomNumber);
+    }
+    // Дожидаемся завершения запроса на вставку
+    await pool.query('INSERT INTO polygons (h3_index, level, gold, wood, ore) VALUES (\$1, \$2, \$3, \$4, \$5)', [h3Index, 10, numbers[0], numbers[1], numbers[2]]);
+    // Теперь получаем данные
+    const { rows } = await pool.query('SELECT * FROM polygons WHERE h3_index = \$1', [h3Index]);
+    return rows[0];
+}
+
 // получение инфы о гексе 10 уровня
 async function getInfoPolygon_10(h3Index) {
     const { rows } = await pool.query('SELECT * FROM polygons WHERE h3_index = \$1', [h3Index]);
-    
+    // Если пусто возвращаем нули
     if (rows.length == 0) {
-        const numbers = [];
-        for (let i = 0; i < 3; i++) {
-            const randomNumber = Math.floor(Math.random() * 10);
-            numbers.push(randomNumber);
+        const zerorows = {
+              id: 0,
+              h3_index: h3Index,
+              level: 10,
+              gold: 0,
+              wood: 0,
+              ore: 0
         }
-        
-        // Дожидаемся завершения запроса на вставку
-        await pool.query('INSERT INTO polygons (h3_index, level, gold, wood, ore) VALUES (\$1, \$2, \$3, \$4, \$5)', [h3Index, 10, numbers[0], numbers[1], numbers[2]]);
-        
-        // Теперь можем выполнить запрос на выборку
-        const { rows } = await pool.query('SELECT * FROM polygons WHERE h3_index = \$1', [h3Index]);
-        console.log(rows);
-        return rows[0];
+        return zerorows;
     }
-    
-    console.log(rows);
+    //console.log(rows);
     return rows[0];
 }
 
@@ -61,12 +70,20 @@ app.get('/api/polygon/:id/info', async (req, res) => {
 
     // Получаем индекс
     const h3Index  = req.params['id'];
+
     // Отправляем в функцию получения данных
-    const row =  await getInfoPolygon_10(h3Index);
-    // Выводим лог
+    const row = await getInfoPolygon_10(h3Index);
     //console.log(row);
-    // Даем ответ
-    res.json(row);
+
+    // Если пусто
+    if (row['id'] == 0) {
+        const row = await setInfoPolygon_10(h3Index)
+        //console.log(row);
+        res.json(row);
+    }
+    else{
+        res.json(row);
+    }
 
   } catch (err) {
     console.error(err);
@@ -77,25 +94,12 @@ app.get('/api/polygon/:id/info', async (req, res) => {
 // Суммирование дочерних гексов
 async function sumChildResources(parentH3Index, targetLevel = 10) {
 
-    // Текущий уровень
-    const currentLevel = h3.getResolution(parentH3Index);
-    console.log(currentLevel, ' ', parentH3Index);    
-    // Базовый случай рекурсии
-    if (currentLevel >= targetLevel) {
-      return await getInfoPolygon_10(parentH3Index);
-    }
-    
     // Получение дочерних гексов
-    const children =  h3.cellToChildren(parentH3Index, currentLevel + 1); // Надо думать ...
-
-    //
-    const center = h3.cellToCenterChild(parentH3Index, currentLevel + 1);
-    console.log('center', center);
-    //
+    const children =  h3.cellToChildren(parentH3Index, targetLevel); // Надо думать ...
 
     // Параллельный запрос ресурсов
     const childrenResources = await Promise.all(
-      children.map(child => sumChildResources(child, targetLevel))
+      children.map(child => getInfoPolygon_10(child))
     );
     
     // Суммирование результатов
@@ -110,13 +114,14 @@ async function sumChildResources(parentH3Index, targetLevel = 10) {
 app.get('/api/polygon/:level/:id/info', async (req, res) => {
   try {
     
-    // Получаем индекс
+    // Получаем параметры
     const h3Index = req.params['id'];
     const level = req.params['level'];
+
     // Отправляем в функцию получения данных
     const rows = await sumChildResources(h3Index);
-    // Выводим лог
     //console.log(rows);
+
     // Даем ответ
     res.json(rows);
 
