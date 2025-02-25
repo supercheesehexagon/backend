@@ -47,22 +47,20 @@ async function getInfoPolygon_10(h3Index) {
         
         // Теперь можем выполнить запрос на выборку
         const { rows } = await pool.query('SELECT * FROM polygons WHERE h3_index = \$1', [h3Index]);
-        //console.log(rows);
+        console.log(rows);
         return rows[0];
     }
     
-    //console.log(rows);
+    console.log(rows);
     return rows[0];
 }
-
-
 
 // Роут 10:
 app.get('/api/polygon/:id/info', async (req, res) => {
   try {
 
     // Получаем индекс
-    const h3Index  = req.params;
+    const h3Index  = req.params['id'];
     // Отправляем в функцию получения данных
     const row =  await getInfoPolygon_10(h3Index);
     // Выводим лог
@@ -88,7 +86,12 @@ async function sumChildResources(parentH3Index, targetLevel = 10) {
     }
     
     // Получение дочерних гексов
-    const children =  h3.cellToChildren(parentH3Index, currentLevel + 1);
+    const children =  h3.cellToChildren(parentH3Index, currentLevel + 1); // Надо думать ...
+
+    //
+    const center = h3.cellToCenterChild(parentH3Index, currentLevel + 1);
+    console.log('center', center);
+    //
 
     // Параллельный запрос ресурсов
     const childrenResources = await Promise.all(
@@ -101,7 +104,8 @@ async function sumChildResources(parentH3Index, targetLevel = 10) {
       wood: acc.wood + wood,
       ore: acc.ore + ore
     }), { gold: 0, wood: 0, ore: 0 });
-  }
+}
+
 // Роут <10:
 app.get('/api/polygon/:level/:id/info', async (req, res) => {
   try {
