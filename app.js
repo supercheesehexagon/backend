@@ -1,93 +1,55 @@
 const express = require('express');
 const cors = require('cors');
-const { Pool } = require('pg');
 const h3 = require('h3-js');
+const db = require('./db');
 const app = express();
+
 app.use(cors());
 app.use(express.json());
 
-// Настройка подключения к PostgreSQL
-const pool = new Pool({
-  host: 'localhost',
-  user: 'postgres',
-  password: '123',
-  database: 'postgres',
-  port: 5432,
-});
-
-// Проверка подключения при старте
-pool.connect()
-  .then(() => console.log('Connected to PostgreSQL'))
-  .catch(err => console.error('Connection error', err.stack));
-
-// Роут для получения всех полигонов
-app.get('/api/polygons', async (req, res) => {
-  try {
-    const { rows } = await pool.query('SELECT * FROM polygons');
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
 // генерация инфы о гексе
 async function setInfoPolygon_10(h3Index) {
-    const numbers = [];
-    for (let i = 0; i < 3; i++) {
-        const randomNumber = Math.floor(Math.random() * 10);
-        numbers.push(randomNumber);
-    }
-    // Дожидаемся завершения запроса на вставку
-    await pool.query('INSERT INTO polygons (h3_index, level, gold, wood, ore) VALUES (\$1, \$2, \$3, \$4, \$5)', [h3Index, 10, numbers[0], numbers[1], numbers[2]]);
-    // Теперь получаем данные
-    const { rows } = await pool.query('SELECT * FROM polygons WHERE h3_index = \$1', [h3Index]);
-    return rows[0];
+  const numbers = Array.from({length: 3}, () => Math.floor(Math.random() * 10));
+  await db.query(
+    'INSERT INTO polygons (h3_index, level, gold, wood, ore) VALUES ($1, $2, $3, $4, $5)',
+    [h3Index, 10, ...numbers])
 }
 
 // получение инфы о гексе 10 уровня
 async function getInfoPolygon_10(h3Index) {
-    const { rows } = await pool.query('SELECT * FROM polygons WHERE h3_index = \$1', [h3Index]);
-    // Если пусто возвращаем нули
-    if (rows.length == 0) {
-        const zerorows = {
-              id: 0,
-              h3_index: h3Index,
-              level: 10,
-              gold: 0,
-              wood: 0,
-              ore: 0
-        }
-        return zerorows;
-    }
-    //console.log(rows);
-    return rows[0];
+  const result = await db.query(
+    'SELECT * FROM polygons WHERE h3_index = $1', 
+    [h3Index]
+  );
+  if (result.rows && result.rows.length === 0) {
+    return { id: 0, h3_index: h3Index, level: 10, gold: 0, wood: 0, ore: 0 };
+  }
+  
+  return result.rows[0];
 }
 
-// Роут 10:
+// Роут получения инфы 10го гекса
 app.get('/api/polygon/:id/info', async (req, res) => {
   try {
-
-    // Получаем индекс
-    const h3Index  = req.params['id'];
+    
+    // Получаем параметры
+    const h3Index = req.params.id;
 
     // Отправляем в функцию получения данных
-    const row = await getInfoPolygon_10(h3Index);
-    //console.log(row);
+    let data = await getInfoPolygon_10(h3Index);
 
-    // Если пусто
-    if (row['id'] == 0) {
-        const row = await setInfoPolygon_10(h3Index)
-        //console.log(row);
-        res.json(row);
-    }
-    else{
-        res.json(row);
+    // Если пусто генерим
+    if (data.id == 0) {
+      setInfoPolygon_10(h3Index);
+
+      // Даем ответ
+      data = await getInfoPolygon_10(h3Index);
     }
 
+    // Даем ответ
+    res.json(data);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: err.message });
   }
 });
 
@@ -110,7 +72,7 @@ async function sumChildResources(parentH3Index, targetLevel = 10) {
     }), { gold: 0, wood: 0, ore: 0 });
 }
 
-// Роут <10:
+// Роут получения инфы <10го гекса
 app.get('/api/polygon/:level/:id/info', async (req, res) => {
   try {
     
@@ -119,11 +81,10 @@ app.get('/api/polygon/:level/:id/info', async (req, res) => {
     const level = req.params['level'];
 
     // Отправляем в функцию получения данных
-    const rows = await sumChildResources(h3Index);
-    //console.log(rows);
+    const data = await sumChildResources(h3Index, 10);
 
     // Даем ответ
-    res.json(rows);
+    res.json(data);
 
   } catch (err) {
     console.error(err);
