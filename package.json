@@ -17,7 +17,8 @@
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "h3-js": "^4.1.0",
-    "pg": "^8.13.3"
+    "pg": "^8.13.3",
+    "ydb-sdk": "^5.9.1"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",

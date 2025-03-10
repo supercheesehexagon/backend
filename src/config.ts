@@ -1,5 +1,5 @@
 interface DBConfig {
-  type: 'postgres' | 'cockroach' | 'clickhouse' | 'ydb';
+  type: 'postgres' | 'citus' | 'greenplum' | 'cockroach' | 'clickhouse' | 'ydb';
   postgres: {
     host: string;
     user: string;
@@ -13,8 +13,37 @@ interface DBConfig {
     user: string;
     password: string;
   };
+  citus: {
+    host: string;
+    user: string;
+    password: string;
+    database: string;
+    port: number;
+    maxConnections?: number;
+  };
+  greenplum: {
+    host: string;
+    user: string;
+    password: string;
+    database: string;
+    port: number;
+    connectionTimeout?: number;
+  };
+  cockroach: {
+    host: string;
+    user: string;
+    password: string;
+    database: string;
+    port: number;
+    ssl?: boolean;
+  };
+  ydb: {
+    endpoint: string;
+    database: string;
+    authToken?: string;
+    serviceAccountKey?: string;
+  };
 }
-
 const config: DBConfig = {
   type: 'postgres', // Перенесено на верхний уровень
   postgres: {
@@ -25,10 +54,35 @@ const config: DBConfig = {
     port: 5432,
   },
   clickhouse: {
-    host: 'localhost',
-    port: 8123,
-    user: 'default',
-    password: ''
+    host: 'host',
+    port: 80,
+    user: 'user',
+    password: 'password',
+  },
+  citus: {
+    host: 'host',
+    user: 'user',
+    password: 'password',
+    database: 'database',
+    port: 80,
+  },
+  greenplum: {
+    host: 'host',
+    user: 'user',
+    password: 'password',
+    database: 'database',
+    port: 80,
+  },
+  cockroach: {
+    host: 'host',
+    user: 'user',
+    password: 'password',
+    database: 'database',
+    port: 80,
+  },
+  ydb: {
+    endpoint: 'endpoint',
+    database: 'database',
   }
 };
 

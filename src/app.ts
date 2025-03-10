@@ -4,18 +4,19 @@ import h3 from 'h3-js';
 import db from './db';
 
 interface PolygonInfo {
-  id: number;
   h3_index: string;
   level: number;
   gold: number;
   wood: number;
   ore: number;
+  fromDB: boolean;
 }
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Функция генерации инфы о гексе
 async function setInfoPolygon_10(h3Index: string): Promise<void> {
   const numbers = Array.from({ length: 3 }, () => Math.floor(Math.random() * 10));
   await db.query(
@@ -24,6 +25,7 @@ async function setInfoPolygon_10(h3Index: string): Promise<void> {
   );
 }
 
+// Функция получения инфы о гексе
 async function getInfoPolygon_10(h3Index: string): Promise<PolygonInfo> {
   const result = await db.query(
     'SELECT * FROM polygons WHERE h3_index = $1',
@@ -31,18 +33,21 @@ async function getInfoPolygon_10(h3Index: string): Promise<PolygonInfo> {
   );
   
   if (result.rows.length === 0) {
-    return { id: 0, h3_index: h3Index, level: 10, gold: 0, wood: 0, ore: 0 };
+    return {h3_index: h3Index, level: 10, gold: 0, wood: 0, ore: 0, fromDB: false };
   }
-  
-  return result.rows[0];
+  const data =  result.rows[0];
+  data.fromDB = true;
+
+  return data;
 }
 
+// Роут получения инфы 10 гекса
 app.get('/api/polygon/:id/info', async (req: Request, res: Response) => {
   try {
     const h3Index = req.params.id;
     let data = await getInfoPolygon_10(h3Index);
 
-    if (data.id === 0) {
+    if (!data.fromDB) {
       await setInfoPolygon_10(h3Index);
       data = await getInfoPolygon_10(h3Index);
     }
@@ -59,6 +64,7 @@ interface ResourceSummary {
   ore: number;
 }
 
+// Функция суммы дочерних гексов
 async function sumChildResources(parentH3Index: string, targetLevel = 10): Promise<ResourceSummary> {
   const children = h3.cellToChildren(parentH3Index, targetLevel);
   
@@ -73,6 +79,7 @@ async function sumChildResources(parentH3Index: string, targetLevel = 10): Promi
   }), { gold: 0, wood: 0, ore: 0 });
 }
 
+// Роут получения инфы <10 гекса
 app.get('/api/polygon/:level/:id/info', async (req: Request, res: Response) => {
   try {
     const h3Index = req.params.id;

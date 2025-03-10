@@ -1,0 +1,1 @@
+{"version":3,"file":"create-table.d.ts","sourceRoot":"","sources":["../../../../../src/utils/test/create-table.ts"],"names":[],"mappings":"AAAA,OAAO,EAA0D,YAAY,EAAC,MAAM,aAAa,CAAC;AAGlG,OAAO,EAAC,GAAG,EAAC,MAAM,OAAO,CAAC;AAE1B,eAAO,MAAM,KAAK,QAA6C,CAAC;AAEhE,wBAAsB,WAAW,CAAC,OAAO,EAAE,YAAY,iBAetD;AAED,wBAAsB,iBAAiB,CAAC,OAAO,EAAE,YAAY,EAAE,IAAI,EAAE,GAAG,EAAE,iBA0BzE"}

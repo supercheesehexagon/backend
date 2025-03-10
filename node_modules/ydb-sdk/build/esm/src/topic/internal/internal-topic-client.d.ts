@@ -1,0 +1,42 @@
+import { Endpoint } from "../../discovery";
+import { Ydb } from "ydb-sdk-proto";
+import { Logger } from "../../logger/simple-logger";
+import ICreateTopicResult = Ydb.Topic.ICreateTopicResult;
+import { AuthenticatedService, ClientOptions } from "../../utils";
+import { IAuthService } from "../../credentials/i-auth-service";
+import { ISslCredentials } from "../../utils/ssl-credentials";
+import { InternalTopicWriteStream, InternalWriteStreamInitArgs } from "./internal-topic-write-stream";
+import { InternalTopicReadStream, InternalReadStreamInitArgs } from "./internal-topic-read-stream";
+import { Context } from "../../context";
+export type InternalCommitOffsetArgs = Ydb.Topic.ICommitOffsetRequest & Required<Pick<Ydb.Topic.ICommitOffsetRequest, 'path' | 'consumer' | 'offset'>>;
+export type InternalCommitOffsetResult = Readonly<Ydb.Topic.CommitOffsetResponse>;
+export type InternalUpdateOffsetsInTransactionArgs = Ydb.Topic.IUpdateOffsetsInTransactionRequest & Required<Pick<Ydb.Topic.UpdateOffsetsInTransactionRequest, 'topics' | 'consumer'>>;
+export type InternalUpdateOffsetsInTransactionResult = Readonly<Ydb.Topic.UpdateOffsetsInTransactionResponse>;
+export type InternalCreateTopicArgs = Ydb.Topic.ICreateTopicRequest & Required<Pick<Ydb.Topic.ICreateTopicRequest, 'path'>>;
+export type InternalCreateTopicResult = Readonly<Ydb.Topic.CreateTopicResponse>;
+export type InternalDescribeTopicArgs = Ydb.Topic.IDescribeTopicRequest & Required<Pick<Ydb.Topic.IDescribeTopicRequest, 'path'>>;
+export type InternalDescribeTopicResult = Readonly<Ydb.Topic.DescribeTopicResponse>;
+export type InternalDescribeConsumerArgs = Ydb.Topic.IDescribeConsumerRequest & Required<Pick<Ydb.Topic.IDescribeConsumerRequest, 'path' | 'consumer'>>;
+export type InternalDescribeConsumerResult = Readonly<Ydb.Topic.DescribeConsumerResponse>;
+export type InternalAlterTopicArgs = Ydb.Topic.IAlterTopicRequest & Required<Pick<Ydb.Topic.IAlterTopicRequest, 'path'>>;
+export type InternalAlterTopicResult = Readonly<Ydb.Topic.AlterTopicResponse>;
+export type InternalDropTopicArgs = Ydb.Topic.IDropTopicRequest & Required<Pick<Ydb.Topic.IDropTopicRequest, 'path'>>;
+export type InternalDropTopicResult = Readonly<Ydb.Topic.DropTopicResponse>;
+export declare class InternalTopicClient extends AuthenticatedService<Ydb.Topic.V1.TopicService> implements ICreateTopicResult {
+    endpoint: Endpoint;
+    private readonly logger;
+    private allStreams;
+    private destroyResolve?;
+    constructor(endpoint: Endpoint, database: string, authService: IAuthService, logger: Logger, sslCredentials?: ISslCredentials, clientOptions?: ClientOptions);
+    destroy(): any;
+    openWriteStreamWithEvents(ctx: Context, args: InternalWriteStreamInitArgs & Pick<Ydb.Topic.StreamWriteMessage.IInitRequest, 'messageGroupId'>): Promise<InternalTopicWriteStream>;
+    openReadStreamWithEvents(ctx: Context, args: InternalReadStreamInitArgs): Promise<InternalTopicReadStream>;
+    commitOffset(ctx: Context, request: InternalCommitOffsetArgs): Promise<Readonly<Ydb.Topic.CommitOffsetResponse>>;
+    updateOffsetsInTransaction(ctx: Context, request: InternalUpdateOffsetsInTransactionArgs): Promise<Readonly<Ydb.Topic.UpdateOffsetsInTransactionResponse>>;
+    createTopic(ctx: Context, request: InternalCreateTopicArgs): Promise<Readonly<Ydb.Topic.CreateTopicResponse>>;
+    describeTopic(ctx: Context, request: InternalDescribeTopicArgs): Promise<Readonly<Ydb.Topic.DescribeTopicResponse>>;
+    describeConsumer(ctx: Context, request: InternalDescribeConsumerArgs): Promise<Readonly<Ydb.Topic.DescribeConsumerResponse>>;
+    alterTopic(ctx: Context, request: InternalAlterTopicArgs): Promise<Readonly<Ydb.Topic.AlterTopicResponse>>;
+    dropTopic(ctx: Context, request: InternalDropTopicArgs): Promise<Readonly<Ydb.Topic.DropTopicResponse>>;
+}
+//# sourceMappingURL=internal-topic-client.d.ts.map

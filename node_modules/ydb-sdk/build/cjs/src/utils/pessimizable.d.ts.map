@@ -1,0 +1,1 @@
+{"version":3,"file":"pessimizable.d.ts","sourceRoot":"","sources":["../../../../src/utils/pessimizable.ts"],"names":[],"mappings":"AACA,OAAO,EAAC,QAAQ,EAAC,MAAM,cAAc,CAAC;AAEtC,MAAM,WAAW,YAAY;IACzB,QAAQ,EAAE,QAAQ,CAAC;CACtB;AAED;;;GAGG;AACH,wBAAgB,YAAY,CAAC,OAAO,EAAE,YAAY,EAAE,YAAY,EAAE,MAAM,EAAE,UAAU,EAAE,kBAAkB,sBAavG"}
